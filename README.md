@@ -14,3 +14,11 @@ All of a user's posts are displayed in chronological order (most recent first)
 
 Blog post
 View a specific blog post. Option to comment, like/save
+
+NODE.JS MODULE DEPENDENCIES:
+    express
+    express-session
+    ejs
+    body-parser
+    cors
+    mysql2
