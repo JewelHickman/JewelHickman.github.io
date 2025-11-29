@@ -17,13 +17,21 @@ app.use(session({
   saveUninitialized: true,
   cookie: { maxAge: 1800000 }
 }));
-//app.use('/features/jokelist', authenticate, express.static(path.join(__dirname, 'features/jokelist')));
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/templates');
 
-function authenticate(req, res, next) {
-    if (req.session && req.session.userID) {
-        return next();
-    }
-    res.redirect('/login');
+// authenticates a user to see if they're logged in
+function authenticate(req) {
+    if (req.session && req.session.userID)
+        return true;
+    return false;
+}
+
+function getSessionData(req) {
+    if (authenticate(req))
+        return JSON.parse(JSON.stringify(({ sessionUser: req.session.username, sessionID: req.session.userID, sessionPriv: req.session.privilegeLevel })));
+    else
+        return JSON.parse(JSON.stringify({ sessionUser: "guest", sessionID: -1, sessionPriv: "Guest" }));
 }
 
 let sql = mysql.createConnection({
@@ -37,16 +45,44 @@ app.get('/', function(req,res){
     res.sendFile(__dirname + 'index.html');
 });
 
+app.get('/userlist', function(req,res){
+    sql.query(
+        "SELECT username FROM users;",
+        function(err, results, fields) {
+            if (err) res.status(500).send("Error occurred");
+            else res.status(200).render('userlist', {
+                title: "Userlist",
+                style: "",
+                userList: results
+            });
+        }
+    );
+});
+
 // render a user page
-// TODO: if session user matches username, include ability to edit & delete & stuff
+// TODO: if session user matches user page, include ability to edit & delete & stuff
 app.get('/users/:username', (req, res) => {
     sql.query(
-        "SELECT posted AS `date`, title, body, postID FROM posts WHERE posts.userID = (SELECT userID FROM users WHERE users.username = " + mysql.escape(req.params.username) + " LIMIT 1) ORDER BY date DESC;",
+        "SELECT * FROM users WHERE username = " + mysql.escape(req.params.username) + ";",
         function(err, results, fields) {
-            if (err) res.send("Page could not be found");
-            res.json(results);
+            if (err || results.length == 0) res.send("Page could not be found");
+            var user = results[0];
+            sql.query(
+                "SELECT posted AS `date`, title, body, posts.userID, postID FROM posts WHERE posts.userID = (SELECT userID FROM users WHERE users.username = " + mysql.escape(req.params.username) + " LIMIT 1) ORDER BY date DESC;",
+                function(err, results, fields) {
+                    if (err) res.send("Page could not be found");
+                    else res.status(200).render('userpage', {
+                        title: user.username + "'s Page",
+                        style: "",  // TODO: users might be able to choose a stylesheet to work from
+                        userData: user,
+                        posts: results,
+                        sessionData: getSessionData(req)
+                    });
+                }   
+            )
         }
-    )
+    );
+
 });
 
 // render a specific post and its comments
@@ -54,15 +90,21 @@ app.get('/users/:username', (req, res) => {
 // TODO: add a form so users can make a comment on a post (this should be on the template I think)
 app.get('/posts/:postnum', (req, res) => {
     sql.query(
-        "SELECT DATE(posted) AS `date`, title, body FROM posts WHERE posts.postID = " + mysql.escape(req.params.postnum) + ";",
+        "SELECT DATE(posted) AS `date`, title, body, userID, postID FROM posts WHERE posts.postID = " + mysql.escape(req.params.postnum) + ";",
         function(err, results, fields) {
-            if (err) res.send("Page could not be found");
-            var post = results;
+            if (err || results.length == 0) res.send("Page could not be found");
+            var post = results[0];
             sql.query(
-                "SELECT posted AS `date`, username, body FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE DESC;",
+                "SELECT posted AS `date`, username, body, comments.userID FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE ASC;",
                 function(err, results, fields) {
-                    if (err) res.json({post});
-                    else res.json({post, comments: results});
+                    if (err) res.status(500).send(err);
+                    else res.status(200).render('post', {
+                        title: post.title,
+                        style: "",
+                        post,
+                        comments: results,
+                        sessionData: getSessionData(req)
+                    })
                 }
             );
         }
@@ -70,14 +112,16 @@ app.get('/posts/:postnum', (req, res) => {
 });
 
 // this should be the form page for writing a new blog post
-// TODO: authenticate
 app.get('/post', (req, res) => {
-    res.sendFile(__dirname + '//post.html');
+    if (authenticate(req))
+        res.sendFile(__dirname + '//post.html');
+    else res.redirect('/login');
 });
 
 // when user makes a post
-// TODO: authenticate
 app.post('/post', (req, res) => {
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+
     const {title, body} = req.body;
     sql.query(
         "INSERT INTO posts (userID, title, body) VALUES (" + mysql.escape(req.session.userID) + ", " + mysql.escape(title) + ", " + mysql.escape(body) + ");",
@@ -89,8 +133,10 @@ app.post('/post', (req, res) => {
 });
 
 // when user deletes a post
-// TODO: authenticate
 app.post('/delete-post', (req, res) => {
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+
+    // TODO: replace query with body
     const postID = req.query.postnum;
     if (!postID) res.status(500).send("No post");
     sql.query(
@@ -103,16 +149,16 @@ app.post('/delete-post', (req, res) => {
 });
 
 // when user comments on a post
-// TODO: authenticate
 app.post('/comment', (req, res) => {
-    const postID = req.query.postnum;
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+
+    const {body, postID} = req.body;
     if (!postID) res.status(500).send("No post");
-    const body = req.body;
 
     sql.query(
         "INSERT INTO comments (userID, postID, body) VALUES (" + mysql.escape(req.session.userID) + ", " + mysql.escape(postID) + ", " + mysql.escape(body) + ");",
         function(err, results, fields) {
-            if (err) res.status(500).send("Comment creation failed!");
+            if (err) throw err; //res.status(500).send("Comment creation failed!");
             else res.status(200).send("Comment creation success!");
         }
     );
@@ -121,8 +167,11 @@ app.post('/comment', (req, res) => {
 // when user deletes a comment
 // TODO: authenticate
 app.post('/delete-comment', (req, res) => {
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+
     const commentID = req.query.commentnum;
     if (!commentID) res.status(500).send("No comment");
+
     sql.query(
         "CALL deleteComment = (" + mysql.escape(commentID) + ", " + mysql.escape(req.session.userID) + ");",
         function(err, results, fields) {
@@ -133,10 +182,14 @@ app.post('/delete-comment', (req, res) => {
 });
 
 app.get('/sign-up', (req, res) => {
-    res.sendFile(__dirname + '//sign-up.html');
+    if (!authenticate(req))
+        res.sendFile(__dirname + '//sign-up.html');
+    else res.redirect('/');
 });
 
 app.post('/sign-up', (req, res) => {
+    if (authenticate(req)) res.status(500).send("Already logged in!");
+
     const {user, pass} = req.body;
     sql.query(
         "INSERT INTO users (username, password) VALUES (" + mysql.escape(user) + ", " + mysql.escape(pass) + ");",
@@ -148,14 +201,15 @@ app.post('/sign-up', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    if (!req.session || !req.session.userID)
+    if (!authenticate(req))
         res.sendFile(__dirname + '//login.html');
     else res.redirect('/');     // if the user is already logged in, we don't want them to be able to log in again
 })
 
 // logs a user in
 app.post('/login', (req, res) => {
-    if (req.session && req.session.userID) res.status(500).send("Already logged in!");  // if the user is already logged in, we don't want them to be able to log in again
+    if (authenticate(req)) res.status(500).send("Already logged in!");  // if the user is already logged in, we don't want them to be able to log in again
+
     const {user, pass} = req.body;
     sql.query(
         "SELECT * FROM users WHERE " + mysql.escape(user) + " = username AND " + mysql.escape(pass) + " = password LIMIT 1;",
