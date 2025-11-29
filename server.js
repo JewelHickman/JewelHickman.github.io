@@ -7,6 +7,9 @@ const PORT = 3000;
 const mysql = require('mysql2');
 
 // Middleware
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use(bodyParser.json());
 app.use(cors());
 app.use(session({
@@ -66,7 +69,7 @@ app.get('/userlist', function(req,res){
 });
 
 // render a user page
-// TODO: if session user matches user page, include ability to edit & delete & stuff
+// TODO: if session user matches user page, include ability to edit & delete posts?
 app.get('/users/:username', (req, res) => {
     sql.query(
         "SELECT * FROM users WHERE username = " + mysql.escape(req.params.username) + ";",
@@ -92,8 +95,7 @@ app.get('/users/:username', (req, res) => {
 });
 
 // render a specific post and its comments
-// TODO: if session user matches username (or session user is admin), include ability to edit & delete & stuff
-// TODO: add a form so users can make a comment on a post (this should be on the template I think)
+// TODO: users should be able to edit and delete their own comments (or anyone's if admin)
 app.get('/posts/:postnum', (req, res) => {
     sql.query(
         "SELECT DATE(posted) AS `date`, title, body, userID, postID FROM posts WHERE posts.postID = " + mysql.escape(req.params.postnum) + ";",
@@ -102,7 +104,7 @@ app.get('/posts/:postnum', (req, res) => {
             else {
                 var post = results[0];
                 sql.query(
-                    "SELECT posted AS `date`, username, body, comments.userID FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE ASC;",
+                    "SELECT posted AS `date`, username, body, commentID, comments.userID FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE ASC;",
                     function(err, results, fields) {
                         if (err) res.status(500).send(err);
                         else res.status(200).render('post', {
@@ -217,7 +219,7 @@ app.post('/delete-post', (req, res) => {
     const postID = req.body.postID;
     if (!postID) res.status(500).send("No post");
     sql.query(
-        "CALL deletePost(" + mysql.escape(postID) + ", " + mysql.escape(req.session.userID) + ");",
+        "CALL deletePost(" + mysql.escape(postID) + ", " + mysql.escape(req.session.userID) + ");", // the sql procedure authenticates for us
         function(err, results, fields) {
             if (err) res.status(500).send("Post deletion failed!");
             else res.status(200).send("Post deletion success!");
@@ -242,20 +244,75 @@ app.post('/comment', (req, res) => {
 });
 
 // when user deletes a comment
-// TODO: authenticate
 app.post('/delete-comment', (req, res) => {
     if (!authenticate(req)) res.status(500).send("Not logged in!");
 
-    const commentID = req.query.commentnum;
+    const commentID = parseInt(req.body.commentNum);
     if (!commentID) res.status(500).send("No comment");
 
     sql.query(
-        "CALL deleteComment = (" + mysql.escape(commentID) + ", " + mysql.escape(req.session.userID) + ");",
+        "CALL deleteComment(" + mysql.escape(commentID) + ", " + mysql.escape(req.session.userID) + ");",    // the sql procedure authenticates for us
         function(err, results, fields) {
-            if (err) res.status(500).send("Comment deletion failed!");
-            else res.status(200).send("Comment deletion success!");
+            // succeed or fail, refresh the page
+            if (err) res.status(500).redirect("/posts/" + req.body.postNum);
+            else res.status(200).redirect("/posts/" + req.body.postNum);
         }
     );
+});
+
+// form for editing a comment
+app.get('/edit-comment/', (req, res) => {
+    if (!authenticate(req)) res.redirect('/login');
+    else {
+        sql.query(
+            "SELECT body, userID, postID, commentID FROM comments WHERE comments.commentID = " + mysql.escape(req.query.commentNum) + ";",
+            function(err, results, fields) {
+                if (err || results.length == 0) res.status(500).send("Comment could not be found");
+                else {
+                    var comment = results[0];
+                    if (comment.userID == req.session.userID || req.session.sessionPriv === 'Admin') {
+                        res.status(200).render('editcomment', {
+                            title: "Edit comment",
+                            style: "",
+                            comment,
+                            sessionData: getSessionData(req)
+                        });
+                    } else {
+                        res.status(500).send("Not allowed to edit comment");
+                    }
+                }
+            }
+        );
+    }
+});
+
+// when user edits a comment
+app.post('/edit-comment', (req, res) => {
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+    else {
+        var { body, commentID } = req.body;
+        sql.query(
+            "SELECT userID, commentID FROM comments WHERE comments.commentID = " + mysql.escape(commentID) + ";",
+            function(err, results, fields) {
+                if (err || results.length == 0) throw err; //res.status(500).send("Error");
+                else {
+                    var comment = results[0];
+                    if (comment.userID == req.session.userID || req.session.sessionPriv == 'Admin') {   // verify user privilege
+                        sql.query(
+                            "UPDATE comments SET body = " + mysql.escape(body) + " WHERE comments.commentID = " + mysql.escape(commentID) + ";",
+                            function(err, results, fields) {
+                                if (err) throw err; //res.status(500).send("Page could not be found");
+                                else res.status(200).send("Success!");
+                            }
+                        );
+                    }
+                    else {
+                        throw err; //res.status(500).send("Not allowed to edit comment");
+                    }
+                }
+            }
+        );
+    }
 });
 
 app.get('/sign-up', (req, res) => {

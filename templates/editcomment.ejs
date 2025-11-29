@@ -1,0 +1,14 @@
+<%- include ('header') %>
+
+<div class="commentedit">
+    <h1>Edit your Comment</h1>
+    Body: <textarea class="input" name="" id="comment-body" type="text" value="<%=comment.body%>"><%=comment.body%></textarea>
+    <input class="input" name="" id="commentnum" type="hidden" value="<%=comment.commentID%>">
+    <input class="input" name="" id="postnum" type="hidden" value="<%=comment.postID%>">
+    <p id="result"></p>
+            
+    <button class="btn" id="editCommentBtn">Save Changes</button>
+</div>
+<script src="../../scripts/comment.js"></script>
+
+<%- include ('footer') %> 
