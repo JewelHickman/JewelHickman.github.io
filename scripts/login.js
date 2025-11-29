@@ -19,21 +19,49 @@ function logIn() {
     .then(data => {
         if (status == 200) {
             console.log("Success:",data);
-            document.getElementById("result").innerText = "Success!";
 
             window.location.replace("http://localhost:3000/users/" + userIn);   // redirect to userpage
         }
         else {
             console.log("Failure");
-            document.getElementById("result").innerText = "Login failed!";
         }
     })
     .catch((error) => {
         console.log("Error:",error);
-        document.getElementById("result").innerText = "Login failed!";
         return;
     });
 }
 
-const btnEl = document.getElementById("btn");
-btnEl.addEventListener("click", logIn);
+function logOff() {
+    var status;
+    fetch('http://localhost:3000/logoff', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+
+        })
+    })
+    .then(response => {
+        status = response.status;
+    })
+    .then(data => {
+        if (status == 200) {
+            console.log("Success:",data);
+            window.location.href = window.location.href; // refresh page in case of redirects
+        }
+        else {
+            console.log("Failure");
+        }
+    })
+    .catch((error) => {
+        console.log("Error:",error);
+        return;
+    });
+}
+
+const loginbtnEl = document.getElementById("loginBtn");
+if (loginbtnEl) loginbtnEl.addEventListener("click", logIn);
+const logoffbtnEl = document.getElementById("logoffBtn");
+if (logoffbtnEl) logoffbtnEl.addEventListener("click", logOff);

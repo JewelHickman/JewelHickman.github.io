@@ -41,8 +41,13 @@ let sql = mysql.createConnection({
     database: "blog_website"
 });
 
+// not working? redirect?
 app.get('/', function(req,res){
-    res.sendFile(__dirname + 'index.html');
+    res.status(200).render('index', {
+        title: "My website",
+        style: "",
+        sessionData: getSessionData(req)
+    });
 });
 
 app.get('/userlist', function(req,res){
@@ -53,7 +58,8 @@ app.get('/userlist', function(req,res){
             else res.status(200).render('userlist', {
                 title: "Userlist",
                 style: "",
-                userList: results
+                userList: results,
+                sessionData: getSessionData(req)
             });
         }
     );
@@ -113,8 +119,13 @@ app.get('/posts/:postnum', (req, res) => {
 
 // this should be the form page for writing a new blog post
 app.get('/post', (req, res) => {
-    if (authenticate(req))
-        res.sendFile(__dirname + '//post.html');
+    if (authenticate(req)) {
+        res.render('makepost', {
+            title: "Make a Post",
+            style: "",
+            sessionData: getSessionData(req)
+        });
+    }
     else res.redirect('/login');
 });
 
@@ -182,8 +193,13 @@ app.post('/delete-comment', (req, res) => {
 });
 
 app.get('/sign-up', (req, res) => {
-    if (!authenticate(req))
-        res.sendFile(__dirname + '//sign-up.html');
+    if (!authenticate(req)) {
+        res.render('sign-up', {
+            title: "Sign Up",
+            style: "",
+            sessionData: getSessionData(req)
+        });
+    }
     else res.redirect('/');
 });
 
@@ -200,9 +216,15 @@ app.post('/sign-up', (req, res) => {
     )
 });
 
+// since we've added it to the header, can probably just get rid of the log in page... maybe
 app.get('/login', (req, res) => {
-    if (!authenticate(req))
-        res.sendFile(__dirname + '//login.html');
+    if (!authenticate(req)) {
+        res.render('login', {
+            title: "Log In",
+            style: "",
+            sessionData: getSessionData(req)
+        });
+    }
     else res.redirect('/');     // if the user is already logged in, we don't want them to be able to log in again
 })
 
@@ -233,11 +255,10 @@ app.post('/login', (req, res) => {
     )
 });
 
-app.post('logoff', (req, res) => {
+app.post('/logoff', (req, res) => {
     req.session.destroy((err) => {
-        res.status(500);
+        res.status(200).send("Success");
     });
-    res.status(200).send("Success");
 });
 
 app.listen(PORT, () => {

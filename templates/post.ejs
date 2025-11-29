@@ -17,7 +17,7 @@
     <% comments.forEach(item => { %>
         <div id="comment">
             <p><%= item.date %></p>
-            <a href="http://localhost:3000/users/<%=item.username%>" target="_blank"><%= item.username %></a>
+            <a href="http://localhost:3000/users/<%=item.username%>" target="_self"><%= item.username %></a>
             <p><%= item.body %></p>
             <!-- add functionality to delete or edit comments if current session user is comment author or admin -->
         </div>

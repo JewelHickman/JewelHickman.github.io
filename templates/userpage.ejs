@@ -9,7 +9,7 @@
         <% posts.forEach(item => { %>
             <div id="post">
                 <p><%= item.date %></p>
-                <a href="http://localhost:3000/posts/<%=item.postID%>" target="_blank"><%= item.title %></a>
+                <a href="http://localhost:3000/posts/<%=item.postID%>" target="_self"><%= item.title %></a>
                 <p><%= item.body %></p>
             </div>
         <% }) %>
