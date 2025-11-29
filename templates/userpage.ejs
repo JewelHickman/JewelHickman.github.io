@@ -1,0 +1,20 @@
+<%- include ('header') %>
+
+<div class="postList">
+    <!-- we'll iterate through all the user's posts and put them in...-->
+    <!-- let's put these in some kind of flexbox or grid, too -->
+    <div id="postLabel"><%= userData.username %>'s Page</div>
+
+    <% if (posts.length > 0) { %>
+        <% posts.forEach(item => { %>
+            <div id="post">
+                <p><%= item.date %></p>
+                <a href="http://localhost:3000/posts/<%=item.postID%>" target="_blank"><%= item.title %></a>
+                <p><%= item.body %></p>
+            </div>
+        <% }) %>
+    <% } %>
+
+</div>
+
+<%- include ('footer') %> 

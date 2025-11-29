@@ -1,0 +1,11 @@
+<%- include ('header') %>
+
+<div class="userList">
+    <% userList.forEach(item => { %>
+        <div>
+            <p><a href="http://localhost:3000/users/<%=item.username%>" target="_blank"><%=item.username%></a></p>
+        </div>
+    <% }) %>
+</div>
+
+<%- include ('footer') %> 

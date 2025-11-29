@@ -1,0 +1,57 @@
+.postList {
+    display: flex;
+    flex-direction: column;
+    background-color: lightblue;
+}
+.postList div {
+    background-color: white;
+    margin: 10px;
+    padding: 20px;
+}
+
+.commentList {
+    display: flex;
+    flex-direction: column;
+    background-color: lightgreen;
+}
+.commentList div {
+    background-color: white;
+    margin: 10px;
+    padding: 20px;
+}
+
+/* TODO: make this a grid or something */
+.userList {
+    display: flex;
+    flex-direction: column;
+    background-color: lightcoral;
+}
+.userList div {
+    background-color: white;
+    margin: 10px;
+    padding: 20px
+}
+
+#post {
+    background-color: white;
+    margin: 10px;
+    padding: 20px;
+}
+
+#postLabel {
+    background-color: white;
+    font-size: 25px;
+    padding: 10px;
+}
+
+#comment {
+    background-color: white;
+    margin: 10px;
+    padding: 20px;
+}
+
+#commentsLabel {
+    background-color: white;
+    font-size: 25px;
+    padding: 10px
+}

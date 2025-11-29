@@ -1,0 +1,39 @@
+<%- include ('header') %>
+
+<div class="postList">
+    <div id="post">
+        <p><%= post.date %></p>
+        <p><%= post.title %></p>
+        <p><%= post.body %></p>
+        <!-- add functionality to delete or edit post if current session user is post author or admin -->
+    </div>
+</div>
+
+<% if (comments.length > 0) { %>
+    <div class="commentList">
+    <div id="commentsLabel"><%=comments.length%> Comments:</div>
+    <!-- we'll iterate through all the post's comments and put them in...-->
+    <!-- let's put these in some kind of flexbox or grid, too -->
+    <% comments.forEach(item => { %>
+        <div id="comment">
+            <p><%= item.date %></p>
+            <a href="http://localhost:3000/users/<%=item.username%>" target="_blank"><%= item.username %></a>
+            <p><%= item.body %></p>
+            <!-- add functionality to delete or edit comments if current session user is comment author or admin -->
+        </div>
+    <% }) %>
+</div>
+<% } %>
+
+<!-- render comment box IFF user is logged in -->
+<% if (sessionData.sessionID != -1) { %>
+    <div id="commentBox">
+        <p>Post a comment!</p>
+        <textarea class="input" name="" id="comment-body" type="text" placeholder=""></textarea>
+        <input class="input" name="" id="postnum" type="hidden" value="<%=post.postID%>">
+        <button class="btn" id="commentBtn">Comment</button>
+    </div>
+    <script src="../scripts/comment.js"></script>
+<% } %>
+
+<%- include ('footer') %> 
