@@ -1,7 +1,16 @@
-function logIn() {
+function logInHeader() {
+    const userIn = document.getElementById("username-h").value;
+    const passIn = document.getElementById("password-h").value;
+    logIn(userIn, passIn);
+}
+
+function logInMain() {
     const userIn = document.getElementById("username").value;
     const passIn = document.getElementById("password").value;
+    logIn(userIn, passIn);
+}
 
+function logIn(userIn, passIn) {
     var status;
     fetch('http://localhost:3000/login', {
         method: 'POST',
@@ -20,7 +29,7 @@ function logIn() {
         if (status == 200) {
             console.log("Success:",data);
 
-            window.location.replace("http://localhost:3000/users/" + userIn);   // redirect to userpage
+            window.location.href = window.location.href;    // refresh page: this will send us to either the user page or return us to current page
         }
         else {
             console.log("Failure");
@@ -62,6 +71,8 @@ function logOff() {
 }
 
 const loginbtnEl = document.getElementById("loginBtn");
-if (loginbtnEl) loginbtnEl.addEventListener("click", logIn);
+if (loginbtnEl) loginbtnEl.addEventListener("click", logInMain);
+const loginbtnElHeader = document.getElementById("loginHeaderBtn");
+if (loginbtnElHeader) loginbtnElHeader.addEventListener("click", logInHeader);
 const logoffbtnEl = document.getElementById("logoffBtn");
 if (logoffbtnEl) logoffbtnEl.addEventListener("click", logOff);

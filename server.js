@@ -98,23 +98,80 @@ app.get('/posts/:postnum', (req, res) => {
     sql.query(
         "SELECT DATE(posted) AS `date`, title, body, userID, postID FROM posts WHERE posts.postID = " + mysql.escape(req.params.postnum) + ";",
         function(err, results, fields) {
-            if (err || results.length == 0) res.send("Page could not be found");
-            var post = results[0];
-            sql.query(
-                "SELECT posted AS `date`, username, body, comments.userID FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE ASC;",
-                function(err, results, fields) {
-                    if (err) res.status(500).send(err);
-                    else res.status(200).render('post', {
-                        title: post.title,
-                        style: "",
-                        post,
-                        comments: results,
-                        sessionData: getSessionData(req)
-                    })
-                }
-            );
+            if (err || results.length == 0) res.status(500).send("Page could not be found");
+            else {
+                var post = results[0];
+                sql.query(
+                    "SELECT posted AS `date`, username, body, comments.userID FROM comments JOIN users USING (userID) WHERE comments.postID = " + mysql.escape(req.params.postnum) + " ORDER BY DATE ASC;",
+                    function(err, results, fields) {
+                        if (err) res.status(500).send(err);
+                        else res.status(200).render('post', {
+                            title: "" + post?.title,
+                            style: "",
+                            post,
+                            comments: results,
+                            sessionData: getSessionData(req)
+                        });
+                    }
+                );
+            }
+
         }
     )
+});
+
+// for users to edit their posts
+app.get('/posts/:postnum/edit', (req, res) => {
+    if (!authenticate(req)) res.redirect('/login');
+    else {
+        sql.query(
+            "SELECT DATE(posted) AS `date`, title, body, userID, postID FROM posts WHERE posts.postID = " + mysql.escape(req.params.postnum) + ";",
+            function(err, results, fields) {
+                if (err || results.length == 0) res.status(500).send("Page could not be found");
+                else {
+                    var post = results[0];
+                    if (post.userID == req.session.userID || req.session.sessionPriv === 'Admin') {
+                        res.status(200).render('editpost', {
+                            title: "Edit post",
+                            style: "",
+                            post,
+                            sessionData: getSessionData(req)
+                        });
+                    } else {
+                        res.status(500).send("Not allowed to edit post");
+                    }
+                }
+            }
+        );
+    }
+});
+
+app.post('/edit-post', (req, res) => {
+    if (!authenticate(req)) res.status(500).send("Not logged in!");
+    else {
+        var { title, body, postID } = req.body;
+        sql.query(
+            "SELECT userID, postID FROM posts WHERE posts.postID = " + mysql.escape(postID) + ";",
+            function(err, results, fields) {
+                if (err || results.length == 0) throw err; //res.status(500).send("Error");
+                else {
+                    var post = results[0];
+                    if (post.userID == req.session.userID || req.session.sessionPriv == 'Admin') {   // verify user privilege
+                        sql.query(
+                            "UPDATE posts SET title = " + mysql.escape(title) + ", body = " + mysql.escape(body) + " WHERE posts.postID = " + mysql.escape(postID) + ";",
+                            function(err, results, fields) {
+                                if (err) throw err; //res.status(500).send("Page could not be found");
+                                else res.status(200).send("Success!");
+                            }
+                        );
+                    }
+                    else {
+                        throw err; //res.status(500).send("Not allowed to edit post");
+                    }
+                }
+            }
+        );
+    }
 });
 
 // this should be the form page for writing a new blog post
@@ -138,7 +195,17 @@ app.post('/post', (req, res) => {
         "INSERT INTO posts (userID, title, body) VALUES (" + mysql.escape(req.session.userID) + ", " + mysql.escape(title) + ", " + mysql.escape(body) + ");",
         function(err, results, fields) {
             if (err) res.status(500).send("Post creation failed!");
-            else res.status(200).send("Post creation success!");
+            else {
+                sql.query(
+                    "SELECT postID FROM posts WHERE posts.userID = " + mysql.escape(req.session.userID) + " ORDER BY posted DESC LIMIT 1;",
+                    function(err, results, fields) {
+                        let postID = results[0].postID;
+                        console.log(postID);
+                        if (err) res.status(500).send("Something went wrong!");
+                        else res.status(200).json(postID);   // use to send user to the post they just made
+                    }
+                );
+            } 
         }
     );
 });
@@ -147,11 +214,10 @@ app.post('/post', (req, res) => {
 app.post('/delete-post', (req, res) => {
     if (!authenticate(req)) res.status(500).send("Not logged in!");
 
-    // TODO: replace query with body
-    const postID = req.query.postnum;
+    const postID = req.body.postID;
     if (!postID) res.status(500).send("No post");
     sql.query(
-        "CALL deletePost = (" + mysql.escape(postID) + ", " + mysql.escape(req.session.userID) + ");",
+        "CALL deletePost(" + mysql.escape(postID) + ", " + mysql.escape(req.session.userID) + ");",
         function(err, results, fields) {
             if (err) res.status(500).send("Post deletion failed!");
             else res.status(200).send("Post deletion success!");
@@ -225,7 +291,7 @@ app.get('/login', (req, res) => {
             sessionData: getSessionData(req)
         });
     }
-    else res.redirect('/');     // if the user is already logged in, we don't want them to be able to log in again
+    else res.redirect('/users/' + req.session.username);     // if the user is already logged in, we don't want them to be able to log in again
 })
 
 // logs a user in

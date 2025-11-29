@@ -1,0 +1,13 @@
+<%- include ('header') %>
+
+<div>
+    <h1>Edit your Post</h1>
+    Title: <input class="input" name="" id="title" type="text" value="<%=post.title%>">
+    Body: <textarea class="input" name="" id="body" type="text" value="<%=post.body%>"><%=post.body%></textarea>
+    <input class="input" name="" id="postnum" type="hidden" value="<%=post.postID%>">
+            
+    <button class="btn" id="editPostBtn">Save Changes</button>
+</div>
+<script src="../../scripts/post.js"></script>
+
+<%- include ('footer') %> 

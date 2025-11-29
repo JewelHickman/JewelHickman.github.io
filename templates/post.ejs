@@ -6,6 +6,12 @@
         <p><%= post.title %></p>
         <p><%= post.body %></p>
         <!-- add functionality to delete or edit post if current session user is post author or admin -->
+
+        <% if (post.userID == sessionData.sessionID || sessionData.sessionPriv === "Admin") { %>
+            <button class="btn" onclick="window.location.href='http://localhost:3000/posts/<%=post.postID%>/edit';">Edit this post</button>
+            <button class="btn" id="deletePostBtn">Delete this post</button>
+            <input class="input" name="" id="username" type="hidden" value="<%=sessionData.sessionUser%>">
+        <% } %>
     </div>
 </div>
 
@@ -33,7 +39,9 @@
         <input class="input" name="" id="postnum" type="hidden" value="<%=post.postID%>">
         <button class="btn" id="commentBtn">Comment</button>
     </div>
-    <script src="../scripts/comment.js"></script>
 <% } %>
+
+<script src="../scripts/comment.js"></script>
+<script src="../scripts/post.js"></script>
 
 <%- include ('footer') %> 
