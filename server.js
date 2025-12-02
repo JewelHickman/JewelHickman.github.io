@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express().use(express.static(__dirname + "//"));
 const PORT = 3000;
 const mysql = require('mysql2');
+const nbbcjs = require('nbbcjs')
+const bbcode = new nbbcjs.BBCode();
 
 // Middleware
 app.use(bodyParser.urlencoded({
@@ -85,6 +87,7 @@ app.get('/users/:username', (req, res) => {
                         style: "",  // TODO: users might be able to choose a stylesheet to work from
                         userData: user,
                         posts: results,
+                        bbcode,
                         sessionData: getSessionData(req)
                     });
                 }   
@@ -111,6 +114,7 @@ app.get('/posts/:postnum', (req, res) => {
                             title: "" + post?.title,
                             style: "",
                             post,
+                            bbcode,
                             comments: results,
                             sessionData: getSessionData(req)
                         });

@@ -14,7 +14,7 @@
             <div id="post">
                 <p><%= item.date %></p>
                 <a id="postlink" href="http://localhost:3000/posts/<%=item.postID%>" target="_self"><%= item.title %></a>
-                <p><%= item.body %></p>
+                <p><%- bbcode.parse(item.body) %></p>
             </div>
         <% }) %>
     <% } %>

@@ -3,7 +3,7 @@
 <div class="postList">
     <div id="post">
         <p><%= post.title %> <small>(<%= post.date %>)</small></p>
-        <p><%= post.body %></p>
+        <p><%- bbcode.parse(post.body) %></p>
         <!-- add functionality to delete or edit post if current session user is post author or admin -->
 
         <% if (post.userID == sessionData.sessionID || sessionData.sessionPriv === "Admin") { %>

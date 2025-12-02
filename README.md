@@ -22,3 +22,4 @@ NODE.JS MODULE DEPENDENCIES:
     body-parser
     cors
     mysql2
+    nbbcjs
