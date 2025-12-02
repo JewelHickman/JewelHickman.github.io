@@ -61,7 +61,7 @@ function deletePost() {
     })
     .then(response => {
         status = response.status;
-        return response.json();
+        return response.json;
     })
     .then(data => {
         if (status == 200) {

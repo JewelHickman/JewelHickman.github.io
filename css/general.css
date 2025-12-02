@@ -115,3 +115,10 @@ header {
     text-decoration:inherit;
     font-weight:bold;
 }
+
+#indexlink {
+    size: auto;
+    color: white;
+    text-decoration: inherit;
+    font-weight: bold;
+}
