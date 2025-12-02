@@ -1,21 +1,25 @@
 main {
     padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 header {
     position: sticky;
     top: 0;
     padding: 20px;
-    background-color: lightgoldenrodyellow;
+    background-color: gray;
 }
 
 .postList {
     display: flex;
     flex-direction: column;
-    background-color: lightblue;
+    background: linear-gradient(225deg,rgba(42, 108, 155, 1) 0%, rgba(87, 195, 199, 1) 50%, rgba(83, 237, 186, 1) 100%);
+    padding: 10px 0px;
+    margin: 10px 0px;
 }
 .postList div {
     background-color: white;
+    box-shadow: 4px 4px 4px rgba(100, 75, 50, 0.5);
     margin: 10px;
     padding: 20px;
 }
@@ -23,24 +27,43 @@ header {
 .commentList {
     display: flex;
     flex-direction: column;
-    background-color: lightgreen;
+    background: linear-gradient(225deg,rgba(83, 237, 186, 1) 0%, rgba(87, 195, 199, 1) 50%, rgba(42, 108, 155, 1) 100%);
+    padding: 10px 0px;
+    margin: 10px 0px;
 }
 .commentList div {
     background-color: white;
+    box-shadow: 4px 4px 4px rgba(100, 75, 50, 0.5);
     margin: 10px;
-    padding: 20px;
+    padding: 15px 20px;
 }
 
-/* TODO: make this a grid or something */
 .userList {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto; /* 6 columns per row */
     background-color: lightcoral;
 }
 .userList div {
     background-color: white;
+    text-align: center;
+    font-size: 30px;
     margin: 10px;
-    padding: 20px
+    padding: 10px;
+}
+
+.inputContainer {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+.inputContainer div {
+    max-width: 50%;
+    display:flex;
+    flex-direction:column;
+    background-color:lightblue;
+    margin: 10px;
+    padding: 20px;
 }
 
 #post {
@@ -58,11 +81,37 @@ header {
 #comment {
     background-color: white;
     margin: 10px;
-    padding: 20px;
+    padding: 15px 20px;
+}
+
+#commentbody {
+    margin: 0px;
+    padding: 0px;
+    box-shadow: 0px 0px;
+}
+
+#commentbox {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 #commentsLabel {
     background-color: white;
     font-size: 25px;
     padding: 10px
+}
+
+#userlink {
+    size: auto;
+    color: darkblue;
+    text-decoration: inherit;
+    font-weight:bold;
+}
+
+#postlink {
+    size: auto;
+    color:darkblue;
+    text-decoration:inherit;
+    font-weight:bold;
 }

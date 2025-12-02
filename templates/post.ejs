@@ -2,8 +2,7 @@
 
 <div class="postList">
     <div id="post">
-        <p><%= post.date %></p>
-        <p><%= post.title %></p>
+        <p><%= post.title %> <small>(<%= post.date %>)</small></p>
         <p><%= post.body %></p>
         <!-- add functionality to delete or edit post if current session user is post author or admin -->
 
@@ -15,42 +14,44 @@
     </div>
 </div>
 
-<% if (comments.length > 0) { %>
-    <div class="commentList">
-    <div id="commentsLabel"><%=comments.length%> Comments:</div>
-    <!-- we'll iterate through all the post's comments and put them in...-->
-    <!-- let's put these in some kind of flexbox or grid, too -->
-    <% comments.forEach(item => { %>
-        <div id="comment">
-            <p><%= item.date %></p>
-            <a href="http://localhost:3000/users/<%=item.username%>" target="_self"><%= item.username %></a>
-            <p><%= item.body %></p>
-            <% if (item.userID == sessionData.sessionID || sessionData.sessionPriv === "Admin") { %>
-                <!-- if user is poster of comment or admin, allow them to edit / delete -->
-                <form action="http://localhost:3000/edit-comment" method="get" target="_self">
-                    <input class="input" name="commentNum" type="hidden" value="<%=item.commentID%>">
-                    <input type="submit" value="Edit this comment" />
-                </form>
-                <form action="http://localhost:3000/delete-comment" method="post" target="_self">
-                    <input class="input" name="commentNum" type="hidden" value="<%=item.commentID%>">
-                    <input class="input" name="postNum" type="hidden" value="<%=post.postID%>">
-                    <input type="submit" value="Delete this comment" />
-                </form>
-            <% } %>
-        </div>
-    <% }) %>
-</div>
-<% } %>
+<div class="commentList">
+    <% if (comments.length > 0) { %>
+        <div id="commentsLabel"><%=comments.length%> Comments:</div>
+        <!-- we'll iterate through all the post's comments and put them in...-->
+        <!-- let's put these in some kind of flexbox or grid, too -->
+        <% comments.forEach(item => { %>
+            <div id="comment">
+                <p><a id="userlink" href="http://localhost:3000/users/<%=item.username%>" target="_self"><%= item.username %></a><small> on <%= item.date %>:</small></p>
+                <p><%= item.body %></p>
+                <% if (item.userID == sessionData.sessionID || sessionData.sessionPriv === "Admin") { %>
+                    <!-- if user is poster of comment or admin, allow them to edit / delete -->
+                    <form action="http://localhost:3000/edit-comment" method="get" target="_self">
+                        <input class="input" name="commentNum" type="hidden" value="<%=item.commentID%>">
+                        <input type="submit" value="Edit this comment" />
+                    </form>
+                    <form action="http://localhost:3000/delete-comment" method="post" target="_self">
+                        <input class="input" name="commentNum" type="hidden" value="<%=item.commentID%>">
+                        <input class="input" name="postNum" type="hidden" value="<%=post.postID%>">
+                        <input type="submit" value="Delete this comment" />
+                    </form>
+                <% } %>
+            </div>
+        <% }) %>
+    <% } else { %>
+        <div id="comment"><p>There aren't any comments on this post yet.</p></div>
+    <% } %>
+     
 
-<!-- render comment box IFF user is logged in -->
-<% if (sessionData.sessionID != -1) { %>
-    <div id="commentBox">
-        <p>Post a comment!</p>
-        <textarea class="input" name="" id="comment-body" type="text" placeholder=""></textarea>
-        <input class="input" name="" id="postnum" type="hidden" value="<%=post.postID%>">
-        <button class="btn" id="commentBtn">Comment</button>
-    </div>
-<% } %>
+    <!-- render comment box IFF user is logged in -->
+    <% if (sessionData.sessionID != -1) { %>
+        <div id="commentbox">
+            <p>Post a comment!</p>
+            <textarea class="input" name="" id="comment-body" type="text" placeholder="" style="max-width:100%;resize:vertical"></textarea><br>
+            <input class="input" name="" id="postnum" type="hidden" value="<%=post.postID%>">
+            <button class="btn" id="commentBtn" style="max-width:100px">Comment</button>
+        </div>
+    <% } %>
+</div>
 
 <script src="../scripts/comment.js"></script>
 <script src="../scripts/post.js"></script>
