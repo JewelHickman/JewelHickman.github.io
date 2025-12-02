@@ -202,7 +202,6 @@ app.post('/post', (req, res) => {
                     "SELECT postID FROM posts WHERE posts.userID = " + mysql.escape(req.session.userID) + " ORDER BY posted DESC LIMIT 1;",
                     function(err, results, fields) {
                         let postID = results[0].postID;
-                        console.log(postID);
                         if (err) res.status(500).send("Something went wrong!");
                         else res.status(200).json(postID);   // use to send user to the post they just made
                     }
